@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy the check_auth0_applications_missing_authorization tool
+
+Metadata:
+  Source: https://github.com/mozilla-iam/check-auth0-applications-missing-authorization
+  TemplateVersion: 1.0.0
+
+Resources:
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Function called by CloudWatch schedule to detect Auth0 clients that were created but are mistakenly missing authorization information in apps.yml
+      Code: build/
+      Handler: check_auth0_applications_missing_authorization.lambda_handler
+      Runtime: python3.9
+      Role: !GetAtt IAMRole.Arn
+      Timeout: 20
+      # https://github.com/keithrozario/Klayers
+      Layers:
+        - 'arn:aws:lambda:us-west-2:770693421928:layer:Klayers-p39-PyYAML:1'
+        - 'arn:aws:lambda:us-west-2:770693421928:layer:Klayers-p39-requests:4'
+      Tags:
+        - Key: Source
+          Value: 'https://github.com/mozilla-iam/check-auth0-applications-missing-authorization'
+
+  ScheduledRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: 'Trigger check_auth0_applications_missing_authorization tool daily at noon Pacific. https://github.com/mozilla-iam/check-auth0-applications-missing-authorization'
+      ScheduleExpression: "cron(0 19 * * ? *)"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt LambdaFunction.Arn
+          Id: check_auth0_applications_missing_authorization
+
+  LambdaFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:invokeFunction
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduledRule.Arn
+
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Role used by the check-auth0-applications-missing-authorization Lambda function
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: ReadParameterStore
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter*
+                  - ssm:DescribeParameters
+                Resource: !Join [ '', [ 'arn:aws:ssm:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':parameter/iam/check_auth0_applications_missing_authorization/*' ] ]
+      Tags:
+        - Key: Source
+          Value: 'https://github.com/mozilla-iam/check-auth0-applications-missing-authorization'
