@@ -37,17 +37,13 @@ The tool is hard coded to
   * are not present in the `temp_client_id_ignore_list` configuration values
     which list out existing clients which are missing authorization.
 
-The following settings can be configured in AWS SSM ParameterStore. The Mozilla
-deployment of the tool runs in the `mozilla-iam` AWS account in `us-west-2`
-which is where these configuration parameters can be found.
+The following settings can be configured in AWS SSM ParameterStore.
 
 * `/iam/check_auth0_applications_missing_authorization/production/auth0_management_api_client_id`
-  * The Auth0 client ID for the `Management API - check_auth0_applications_missing_authorization`
-    Auth0 client which is used to query the [Auth0 management API](https://auth0.com/docs/api/management/v2#!/Clients/get_clients)
+  * The Auth0 client ID for the Auth0 client which is used to query the [Auth0 management API](https://auth0.com/docs/api/management/v2#!/Clients/get_clients)
     for the list of clients/applications.
 * `/iam/check_auth0_applications_missing_authorization/production/auth0_management_api_client_secret`
-  * The Auth0 client secret for the `Management API - check_auth0_applications_missing_authorization`
-    Auth0 client.
+  * The Auth0 client secret for the Auth0 client.
 * `/iam/check_auth0_applications_missing_authorization/production/pagerduty_integration_key`
   * The PagerDuty API Key for the [PagerDuty Events API v2](https://developer.pagerduty.com/docs/ZG9jOjExMDI5NTgw-events-api-v2-overview)
     which the tool uses to alert when it discovers Auth0 clients/applications
@@ -61,7 +57,7 @@ which is where these configuration parameters can be found.
 
 # Current PagerDuty Service
 
-[IAM Relying Party Check](https://mozilla.pagerduty.com/service-directory/P2DSVSF)
+There is no currently provisioned PagerDuty service for this tool as the tool isn't deployed.
 
 # PagerDuty Alert
 
